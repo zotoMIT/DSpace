@@ -1,0 +1,17 @@
+// front page styles
+
+#featured_collections {
+	li.list-group-item {
+		background: none;
+		border: none;
+		padding-left: 0;
+
+		img.collection-logo {
+			max-width: 100%;
+		}
+
+		span.collection {
+			font-size: 18px;
+		}
+	}
+}
