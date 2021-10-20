@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <document xmlns="http://di.tamu.edu/DRI/1.0/" xmlns:i18n="http://apache.org/cocoon/i18n/2.1" version="1.1">
 <body>
-<div id="file.news.div.news" n="news" rend="primary">
-<head>Welcome to Dome at the MIT Libraries</head>
-<p>Search the MIT Libraries' digital collections -- images, media, maps, and more...</p>
+<div id="featured.collections" n="collections" rend="primary">
+	<head>Featured Collections</head>
 </div>
+<div id="link.to.all"><xref target="/community-list">See all communities and collections</xref></div>
 </body>
 <options/>
 <meta>
