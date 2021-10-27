@@ -20,24 +20,69 @@
 # default value of "oai.solr.url" in the modules/oai.cfg file.
 #
 
+##########################################################################################
+# Dome Configuration Organization                                                  #
+#                                                                                        #
+# This file is organized with sections:                                                  #
+#                                                                                        #
+# Overwritten by Ansible:   Variables overwritten by vtlibans site_secrets.yml variables.#
+#                                                                                        #
+# Not overwritten by Ansible: Variables in dspace.cfg that are overwritten in local.cfg  #
+#                             in roughly the order the variables appear in dspace.cfg.   #
+#                                                                                        #
+# Overwritten modules files:  Variable in config/modules files overwritten by local.cfg, #
+#                             listed in alphebetical order of module filenames.          #
+#                                                                                        #
+# Note: config/authentication-ip.cfg has been customized directly.                       #
+########################################################################################## 
 
-##########################
-# SERVER CONFIGURATION   #
-##########################
 
-# DSpace installation directory.
-# This is the location where you want to install DSpace.
-# Windows note: Please remember to use forward slashes for all paths (e.g. C:/dspace)
-dspace.dir=/dspace
+##########################################################################################
+# OVERWRITTEN BY ANSIBLE   Variables overwritten by vtlibans site_secrets.yml variables. #
+##########################################################################################
 
-# DSpace host name - should match base URL.  Do not include port number
-dspace.hostname = localhost
+##### Basic information ######
+
+# DSpace host name - should match base URL.  Do not include port number.
+dspace.hostname = {{ endpoint_url }}
 
 # DSpace base host URL.  Include port number etc.
-dspace.baseUrl = http://localhost:8080
+dspace.baseUrl = {{ http_s }}${dspace.hostname}
 
-# The user interface you will be using for DSpace. Common usage is either xmlui or jspui
-dspace.ui = xmlui
+##### Database settings #####
+# DSpace only supports two database types: PostgreSQL or Oracle
+
+# URL for connecting to database
+db.url = {{ database_url }}
+
+# Database username and password
+db.username = {{ database_user }}
+db.password = {{ database_user_password }}
+
+#---------------------------------------------------------------#
+#--------------XMLUI SPECIFIC CONFIGURATIONS--------------------#
+#---------------------------------------------------------------#
+# These configs are only used by the XML User Interface         #
+#---------------------------------------------------------------#
+
+# If you would like to use Google Analytics to track general website statistics then
+# use the following parameter to provide your Analytics key. First sign up for an
+# account at http://analytics.google.com, then create an entry for your repository
+# website. Analytics will give you a snipet of JavaScript code to place on your site,
+# inside that snipet is your Google Analytics key usually found in this line:
+# _uacct = "UA-XXXXXXX-X"
+# Take this key (just the UA-XXXXXX-X part) and place it here in this parameter.
+xmlui.google.analytics.key = {{ ga_key }}
+
+##########################################################################################
+# NOT OVERWRITTEN BY ANSIBLE  Variables in dspace.cfg that are overwritten in local.cfg  #
+#                               in roughly the order the variables appear in dspace.cfg. #                                                         #
+##########################################################################################
+
+# DSpace installation directory.
+dspace.dir=/dspace
+
+##### Basic information ######
 
 # Full link your end users will use to access DSpace. In most cases, this will be the baseurl followed by
 # the context path to the UI you are using.
@@ -45,67 +90,35 @@ dspace.ui = xmlui
 # Alternatively, you can use a url redirect or deploy the web application under the servlet container root.
 # In this case, make sure to remove the /${dspace.ui} from the dspace.url property.
 #dspace.url = ${dspace.baseUrl}/${dspace.ui}
+# Changed in local.cfg.j2
+dspace.url = ${dspace.baseUrl}
 
 # Name of the site
-dspace.name = DSpace at My University
-
-# assetstore.dir, look at DSPACE/config/spring/api/bitstore.xml for more options
-# default is ${dspace.dir}/assetstore, uncomment and modify if you need to use a different path
-#assetstore.dir = ${dspace.dir}/assetstore
-assetstore.dir = ${dspace.dir}/assetstore
+dspace.name = Dome
 
 # Default language for metadata values
-#default.language = en_US
+default.language = en
+
+##### Database settings #####
+
+## Connection pool parameters
+db.maxidle = -1
+
+# Determine if prepared statement should be cached. (default is true)
+#db.statementpool = true
+
+# Specify a name for the connection pool (useful if you have multiple applications sharing Tomcat's dbcp)
+# If not specified, defaults to 'dspacepool'
+#db.poolname = dspacepool
+
+# TODO db.statementpool and db.poolname do not appear in dspae.cfg in DSpace 6
 
 # Solr server/webapp.
 # DSpace uses Solr for all search/browse capability (and for usage statistics by default).
 # The included 'solr' webapp MUST be deployed to Tomcat for DSpace to function.
 # Usually it will be available via port 8080 and the 'solr' context path. But,
 # But, you may need to modify this if you are running DSpace on a custom port, etc.
-solr.server = http://localhost:8080/solr
-
-##########################
-# DATABASE CONFIGURATION #
-##########################
-# DSpace only supports two database types: PostgreSQL or Oracle
-
-# URL for connecting to database
-#    * Postgres template: jdbc:postgresql://localhost:5432/dspace
-#    * Oracle template: jdbc:oracle:thin:@//localhost:1521/xe
-db.url = jdbc:postgresql://localhost:5432/dspace
-
-# JDBC Driver
-#    * For Postgres: org.postgresql.Driver
-#    * For Oracle:   oracle.jdbc.OracleDriver
-db.driver = org.postgresql.Driver
-
-# Database Dialect (for Hibernate)
-#    * For Postgres: org.dspace.storage.rdbms.hibernate.postgres.DSpacePostgreSQL82Dialect
-#    * For Oracle:   org.hibernate.dialect.Oracle10gDialect
-db.dialect = org.dspace.storage.rdbms.hibernate.postgres.DSpacePostgreSQL82Dialect
-
-# Database username and password
-db.username = dspace
-db.password = dspace
-
-# Database Schema name
-#    * For Postgres, this is often "public" (default schema)
-#    * For Oracle, schema is equivalent to the username of your database account,
-#      so this may be set to ${db.username} in most scenarios.
-db.schema = public
-
-## Connection pool parameters
-
-# Maximum number of DB connections in pool (default = 30)
-#db.maxconnections = 30
-
-# Maximum time to wait before giving up if all connections in pool are busy (milliseconds)
-# (default = 10000ms or 10 seconds)
-#db.maxwait = 10000
-
-# Maximum number of idle connections in pool (-1 = unlimited)
-# (default = 10)
-#db.maxidle = 10
+# TODO - check solr.server = http://localhost:8080/solr
 
 
 #######################
@@ -113,32 +126,35 @@ db.schema = public
 #######################
 
 # SMTP mail server (allows DSpace to send email notifications)
-#mail.server = smtp.example.com
-
-# SMTP mail server authentication username and password (if required)
-#mail.server.username = myusername
-#mail.server.password = mypassword
-
-# SMTP mail server alternate port (defaults to 25)
-#mail.server.port = 25
+mail.server = localhost
 
 # From address for mail
 # All mail from the DSpace site will use this 'from' address
-#mail.from.address = dspace-noreply@myu.edu
+mail.from.address = no-reply@Dome.mit.edu
 
 # When feedback is submitted via the Feedback form, it is sent to this address
 # Currently limited to one recipient!
-#feedback.recipient = dspace-help@myu.edu
+feedback.recipient = Dome@mit.edu
 
 # General site administration (Webmaster) e-mail
-#mail.admin = dspace-help@myu.edu
-
-# Recipient for server errors and alerts (defaults to mail.admin)
-#alert.recipient = ${mail.admin}
+mail.admin = Dome@MIT.edu
 
 # Recipient for new user registration emails (defaults to unspecified)
-#registration.notify =
+registration.notify = ${mail.admin}
 
+##### Logging configuration #####
+
+# TODO check config/log4j.properties
+
+# All other log4j settings moved to config/log4j.properties - DSpace 6
+
+# DSpace 5 settings
+# Where to put the logs (used in configuration only)
+log.dir = ${dspace.dir}/log
+
+# If enabled, the logging and the Solr statistics system will look for
+# an X-Forwarded-For header. If it finds it, it will use this for the user IP address
+#useProxies = true
 
 ########################
 # HANDLE CONFIGURATION #
@@ -154,7 +170,7 @@ db.schema = public
 # as canonical prefix. Please make sure to change handle.canonical.prefix
 # after registering with handle.net by uncommenting one of the following
 # lines, depending if you prefer to use http or https:
-# handle.canonical.prefix = http://hdl.handle.net/
+handle.canonical.prefix = http://hdl.handle.net/
 # handle.canonical.prefix = https://hdl.handle.net/
 #
 # Note that this will not alter dc.identifer.uri metadata for existing
@@ -164,43 +180,356 @@ db.schema = public
 # CNRI Handle prefix
 # (Defaults to a dummy/fake prefix of 123456789)
 #handle.prefix = 123456789
+handle.prefix = 1721.3
 
-#######################
-# PROXY CONFIGURATION #
-#######################
-# uncomment and specify both properties if proxy server required
-# proxy server for external http requests - use regular hostname without port number
-#http.proxy.host =
+#### Media Filter / Format Filter plugins (through PluginService) ####
+# Media/Format Filters help to full-text index content or
+# perform automated format conversions
 
-# port number of proxy server
-#http.proxy.port =
+#Names of the enabled MediaFilter or FormatFilter plugins
+filter.plugins = PDF Text Extractor
+filter.plugins = HTML Text Extractor
+filter.plugins = Word Text Extractor
+filter.plugins = Excel Text Extractor
+filter.plugins = PowerPoint Text Extractor
+filter.plugins = ImageMagick Image Thumbnail
+filter.plugins = ImageMagick PDF Thumbnail
 
-##########################
-# AUTHENTICATION METHODS #
-##########################
-# EXAMPLE OVERRIDE:
-# Override the default authentication method(s) defined in authentication.cfg
-# by defining your own custom ordered list in this local.cfg.
+# [To enable Branded Preview]: uncomment and insert the following into the plugin list
+#                Branded Preview JPEG, \
+
+# [To enable ImageMagick Thumbnail]:
+#    remove "JPEG Thumbnail" from the plugin list
+#    uncomment and insert the following line into the plugin list
+#                ImageMagick Image Thumbnail, ImageMagick PDF Thumbnail, \
+
+#Assign 'human-understandable' names to each filter
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.PDFFilter = PDF Text Extractor
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.HTMLFilter = HTML Text Extractor
+# plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.WordFilter = Word Text Extractor
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.PoiWordFilter = Word Text Extractor
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.ExcelFilter = Excel Text Extractor
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.PowerPointFilter = PowerPoint Text Extractor
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.JPEGFilter = JPEG Thumbnail
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.BrandedPreviewJPEGFilter = Branded Preview JPEG
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.PDFBoxThumbnail = PDFBox JPEG Thumbnail
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.ImageMagickImageThumbnailFilter = ImageMagick Image Thumbnail
+plugin.named.org.dspace.app.mediafilter.FormatFilter = org.dspace.app.mediafilter.ImageMagickPdfThumbnailFilter = ImageMagick PDF Thumbnail
+
+# Custom settigns for ImageMagick Thumbnail Filters
+# ImageMagick and GhostScript must be installed on the server, set the path to ImageMagick and GhostScript executable
+#   http://www.imagemagick.org/
+#   http://www.ghostscript.com/
+# Note: thumbnail.maxwidth and thumbnail.maxheight are used to set Thumbnail dimensions
+org.dspace.app.mediafilter.ImageMagickThumbnailFilter.ProcessStarter = /usr/bin
+
+# bitstreams generated by this process will contain the following description and may be overwritten
+org.dspace.app.mediafilter.ImageMagickThumbnailFilter.bitstreamDescription = IM Thumbnail
 #
-# By default, all of these methods are commented out and DSpace will use the
-# settings from authentication.cfg. But you may uncomment whichever plugins you
-# need in order to change the default settings (or reorder them below).
+# bitstream descriptions that do not conform to the following regular expression will not be overwritten
+org.dspace.app.mediafilter.ImageMagickThumbnailFilter.replaceRegex = ^Generated Thumbnail$
+
+# Enable text indexing of WebVTT caption files
+filter.org.dspace.app.mediafilter.HTMLFilter.inputFormats = HTML, Text, WebVTT caption file
+
+### Item export and download settings ###
+
+# The maximum size in Megabytes the export should be.  This is enforced before the
+# compression.  Each bitstream's size in each item being exported is added up, if their
+# cummulative sizes are more than this entry the export is not kicked off
+org.dspace.app.itemexport.max.size = 4096
+
+
+#---------------------------------------------------------------#
+#--------------JSPUI & XMLUI CONFIGURATIONS---------------------#
+#---------------------------------------------------------------#
+# These configs are used by both JSP and XML User Interfaces,   #
+# except where explicitly stated otherwise.                     #
+#---------------------------------------------------------------#
+
+#### Creative Commons settings ######
+
+# Jurisdiction of the creative commons license -- is it ported or not?
+# Use the key from the url seen in the response from the api call,
+# http://api.creativecommons.org/rest/1.5/support/jurisdictions
+# Commented out means the license is unported.
+# (e.g. nz = New Zealand, uk = England and Wales, jp = Japan)
+cc.license.jurisdiction = 
+
+##### Settings for Thumbnail creation #####
+
+# maximum width and height of generated thumbnails
+thumbnail.maxwidth  = 200
+thumbnail.maxheight = 200
+
+##### Settings for item count (strength) information ####
+
+# Whether to display collection and community strengths (i.e. item counts)
+# XMLUI only makes strengths available to themes if this is set to true! 
+# To show strengths in the XMLUI, you also need to create or use a theme which
+# displays them.
+# WARNING: This feature may slow overall performance
+webui.strengths.show = true
+
+#### Syndication Feed (RSS) Settings ######
+
+# number of DSpace items per feed (the most recent submissions)
+# pg 2016-09-21
+webui.feed.items = 10
+
+# Customise the metadata fields to show in the feed for each item's description.
+# Elements will be displayed in the order that they are specified here.
 #
-# You may also copy default settings from the corresponding authentication-*.cfg
-# configuration file and override them in this local.cfg.
+# The form is <schema prefix>.<element>[.<qualifier>|.*][(date)], ...
+#
+# Similar to the item display UI, the name of the field for display
+# in the feed will be drawn from the current UI dictionary,
+# using the key:
+# "metadata.<field>"
+#
+# e.g.   "metadata.dc.title"
+#        "metadata.dc.contributor.author"
+#        "metadata.dc.date.issued"
+# af 2016-12-06
+webui.feed.item.description =  dc.contributor.author, dc.contributor.editor
 
-# IP-based authentication/authorization. See authentication-ip.cfg for default configuration.
-#plugin.sequence.org.dspace.authenticate.AuthenticationMethod = org.dspace.authenticate.IPAuthentication
+# pg 2016-10-21
+# Boolean option for Atom - don't show dc.creator since author is already present
+webui.feed.atom.dc.author.show = false
 
-# LDAP authentication/authorization. See authentication-ldap.cfg for default configuration.
-#plugin.sequence.org.dspace.authenticate.AuthenticationMethod = org.dspace.authenticate.LDAPAuthentication
+# Customize the extra namespaced DC elements added to the item (RSS) or entry
+# (Atom) element.  These let you include individual metadata values in a
+# structured format for easy extraction by the recipient, instead of (or in
+# addition to) appending these values to the Description field.
+## dc:creator value(s)
+# alaw 2016-12-12
+webui.feed.item.dc.creator = dc.contributor.author
+## dc:date value (may be contradicted by webui.feed.item.date)
+#webui.feed.item.dc.date = dc.date.issued
+## dc:description (e.g. for a distinct field that is ONLY the abstract)
+# af 2016-12-06
+webui.feed.item.dc.description = dc.description.abstract
 
-# Shibboleth authentication/authorization. See authentication-shibboleth.cfg for default configuration.
-#plugin.sequence.org.dspace.authenticate.AuthenticationMethod = org.dspace.authenticate.ShibAuthentication
+#### Content Inline Disposition Threshold ####
+#
+# Set the max size of a bitstream that can be served inline
+# On xmlui, a setting of zero allows all sizes
+# This fixed issues where PDFs were not displaying
+# directly in some browsers; it also may be required
+# for inline video playing.
+xmlui.content_disposition_threshold = 0
 
-# X.509 certificate authentication. See authentication-x509.cfg for default configuration.
-#plugin.sequence.org.dspace.authenticate.AuthenticationMethod = org.dspace.authenticate.X509Authentication
 
-# Authentication by Password (encrypted in DSpace's database). See authentication-password.cfg for default configuration.
-# Enabled by default in authentication.cfg
-#plugin.sequence.org.dspace.authenticate.AuthenticationMethod = org.dspace.authenticate.PasswordAuthentication
+#####  Authority Control Settings  #####
+plugin.named.org.dspace.content.authority.ChoiceAuthority = \
+# org.dspace.content.authority.SampleAuthority = Sample, \
+# org.dspace.content.authority.LCNameAuthority = LCNameAuthority, \
+# org.dspace.content.authority.SHERPARoMEOPublisher = SRPublisher, \
+org.dspace.content.authority.SHERPARoMEOJournalTitle = SRJournalTitle
+#  org.dspace.content.authority.SolrAuthority = SolrAuthorAuthority
+
+choices.plugin.dc.title.serial = SRJournalTitle
+choices.presentation.dc.title.serial = lookup
+authority.controlled.dc.title.serial = true
+
+#---------------------------------------------------------------#
+#--------------XMLUI SPECIFIC CONFIGURATIONS--------------------#
+#---------------------------------------------------------------#
+# These configs are only used by the XML User Interface         #
+#---------------------------------------------------------------#
+
+### Settings for Item lists in Mirage theme ###
+# What should the emphasis be in the display of item lists?
+# Possible values : 'file', 'metadata'. If your repository is
+# used mainly for scientific papers 'metadata' is probably the
+# best way. If you have a lot of images and other files 'file'
+# will be the best starting point
+# (metdata is the default value if this option is not specified)
+xmlui.theme.mirage.item-list.emphasis = file
+
+# Determine which bundles administrators and collection administrators may upload
+# into an existing item through the administrative interface. If the user does not
+# have the appropriate privileges (add & write) on the bundle then that bundle will
+# not be shown to the user as an option.
+# Allow upload to MOVIEPOSTER bundle from web UI
+xmlui.bundle.upload = ORIGINAL, METADATA, THUMBNAIL, MOVIEPOSTER, LICENSE, CC-LICENSE, SWORD
+
+##########################################################################################
+# Overwritten modules files:  Variable in config/modules files overwritten by local.cfg, #
+#                             listed in alphebetical order of module filenames.          #
+# Note: config/authentication-ip.cfg has been customized directly.                       #
+##########################################################################################
+
+#########################################################
+#   Dome AUTHENTICATION                         #
+#      parameters override modules/authentication.cfg #
+#########################################################
+
+#---------------------------------------------------------------#
+#----------ENABLED AUTHENTICATION METHODS/PLUGINS---------------#
+#---------------------------------------------------------------#
+# This configuration setting contains the listing of all        #
+# currently enabled authentication plugins. DSpace supports an  #
+# Authentication "stack" which allows you to enable multiple    #
+# forms of Authentication at the same time. Enabled             #
+# Authentication plugins are invoked in order until one of them #
+# succeeds.                                                     #
+#---------------------------------------------------------------#
+
+plugin.sequence.org.dspace.authenticate.AuthenticationMethod = \
+        org.dspace.authenticate.PasswordAuthentication, \
+        org.dspace.authenticate.IPAuthentication
+
+#################################################
+#   Dome BATCH METADATA EDIT              #
+#      parameters override modules/bulkedit.cfg #
+#################################################
+
+#---------------------------------------------------------------#
+#-----------BATCH METADATA EDITOR CONFIGURATIONS----------------#
+#---------------------------------------------------------------#
+# Configuration properties used solely by the Batch Metadata    #
+# Editing System                                                #
+#---------------------------------------------------------------#
+
+# A hard limit of the number of items allowed to be edited in one go in the UI
+# (does not apply to the command line version)
+bulkedit.gui-item-limit = 1000
+
+# Metadata elements to exclude when exporting via the user interfaces, or when using the
+# command line version and not using the -a (all) option.
+bulkedit.ignore-on-export = dc.date.accessioned, dc.date.available, \
+                    dc.date.updated, dc.description.provenance
+
+################################################
+#   Dome ClamAV                         #
+#      parameters override modules/clamav.cfg #
+###############################################
+
+#---------------------------------------------------------------#
+#--------------CLAMAV ANTI-VIRUS CONFIGURATIONS-----------------#
+#---------------------------------------------------------------#
+# Configuration properties used solely by Clamav curation task  #
+#---------------------------------------------------------------#
+
+# Initial timeout value (in milliseconds) used when the socket is connecting
+clamav.socket.timeout = 120000
+
+# Flag indicating whether a scan should stop when the first infected bitstream
+# is detected within an item. Normally a complete scan is desired, so default
+# value is false. But if items can contain large numbers of bitstreams, the
+# display of the results can become unwieldy.
+clamav.scan.failfast = true
+
+############################################################
+#   Dome Curate                                      #
+#      parameters override modules/curate.cfg              #
+############################################################
+
+#---------------------------------------------------------------#
+#--------------CURATION SYSTEM CONFIGURATIONS-------------------#
+#---------------------------------------------------------------#
+# Configuration properties used solely by the curation system   #
+#---------------------------------------------------------------#
+
+# Friendly names for curation tasks to appear in admin UI
+# Also acts as a filter - i.e. tasks not enumerated here can still
+# be invoked on cmd line, etc - just not in UI
+curate.ui.tasknames = profileformats = Profile Bitstream Formats
+curate.ui.tasknames = requiredmetadata = Check for Required Metadata
+curate.ui.tasknames = checklinks = Check Links in Metadata
+curate.ui.tasknames = vscan = Scan for Viruses
+
+############################################################
+#   Dome Submission Curation                         #
+#      parameters override modules/submission-curation.cfg #
+############################################################
+
+#---------------------------------------------------------------#
+#------------SUBMISSION CURATION CONFIGURATIONS-----------------#
+#---------------------------------------------------------------#
+
+# This file contains configuration properties solely relating   #
+# to the scheduling of curation tasks during submission.        #
+#---------------------------------------------------------------#
+# Scan for viruses
+submission-curation.virus-scan = true
+
+#########################################################
+#   Dome USAGE STATISTICS                         #
+#      parameters override modules/usage-statistics.cfg #
+#########################################################
+
+# Control if the statistics pages should be only shown to authorized users
+# If enabled, only the administrators for the DSpaceObject will be able to
+# view the statistics.
+# If disabled, anyone with READ permissions on the DSpaceObject will be able
+# to view the statistics.
+#View/download statistics
+#View/download statistics
+usage-statistics.authorization.admin.usage=false
+
+# pg July 2016
+# Number of results to show
+# Note that usage is itemcount.usage corresponds to statistics-home as well
+usage-statistics.itemcount.usage = 100
+usage-statistics.itemcount.search = 10
+usage-statistics.itemcount.workflow = 10
+
+#####################################################
+#   Dome SWORD V.1                            #
+#      parameters override modules/sword-server.cfg #
+#####################################################
+
+#---------------------------------------------------------------#
+#-------------SWORD V.1 SERVER CONFIGURATIONS-------------------#
+#---------------------------------------------------------------#
+# These configs are only used by the SWORD Server interface,    #
+# version 1.3 (used by DSpace to accept ingest packages via     #
+# SWORD protocol)                                               #
+#---------------------------------------------------------------#
+
+# The base URL of the SWORD service document.  This is the
+# URL from which DSpace will construct the service document
+# location urls for the site, and for individual collections
+#
+# The default is {dspace.url}/sword/servicedocument
+#
+# In the event that you are not deploying DSpace as the ROOT
+# application in the servlet container, this will generate
+# incorrect URLs, and you should override the functionality
+# by specifying in full as below:
+#
+sword-server.servicedocument.url = http://${dspace.hostname}/sword/servicedocument
+
+#######################################################
+#   Dome SWORD 2.0                              #
+#      parameters override modules/swordv2-server.cfg #
+#######################################################
+
+#---------------------------------------------------------------#
+#----------------SWORD 2.0 SERVER CONFIGURATIONS----------------#
+#---------------------------------------------------------------#
+# These configs are only used by the SWORD Server interface,    #
+# version 2.0 (used by DSpace to accept ingest packages via     #
+# SWORD 2.0 protocol)                                           #
+#---------------------------------------------------------------#
+
+# the base url of the sword 2.0  system
+#
+# the default if {dspace.url}/swordv2
+#
+swordv2-server.url = http://${dspace.hostname}/swordv2
+
+# The base URL of the SWORD service document.  This is the
+# URL from which DSpace will construct the service document
+# location urls for the site, and for individual collections
+#
+# The default is {dspace.url}/swordv2/servicedocument
+#
+# In the event that you are not deploying DSpace as the ROOT
+# application in the servlet container, this will generate
+# incorrect URLs, and you should override the functionality
+# by specifying in full as below:
+#
+swordv2-server.servicedocument.url = http://${dspace.hostname}/swordv2/servicedocument
