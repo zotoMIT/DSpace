@@ -190,5 +190,5 @@ thumbnail.maxwidth  = 200
 thumbnail.maxheight = 200
 
 
-xmlui.google.analytics.key=UA-1760176-29
+xmlui.google.analytics.key = {{ ga_key }}
 
